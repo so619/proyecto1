@@ -1,0 +1,1802 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Biomédico - Gestión Completa</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .alert {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .critical {
+            background-color: #ffdddd;
+            border-left: 6px solid #f44336;
+        }
+        .warning {
+            background-color: #fff4dd;
+            border-left: 6px solid #ff9800;
+        }
+        .success {
+            background-color: #ddffdd;
+            border-left: 6px solid #4CAF50;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button.secondary {
+            background-color: #6c757d;
+        }
+        button.secondary:hover {
+            background-color: #5a6268;
+        }
+        button.success-btn {
+            background-color: #28a745;
+        }
+        button.success-btn:hover {
+            background-color: #218838;
+        }
+        button.danger {
+            background-color: #dc3545;
+        }
+        button.danger:hover {
+            background-color: #c82333;
+        }
+        #qr-reader {
+            width: 100%;
+            margin: 20px 0;
+        }
+        .qr-container {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+        .barcode-container {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .process-container {
+            background-color: #e6f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .item-process {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        #document-process {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .movement-type {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .movement-card {
+            width: 45%;
+            padding: 20px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .movement-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .movement-card.entry {
+            border-top: 4px solid #28a745;
+        }
+        .movement-card.exit {
+            border-top: 4px solid #dc3545;
+        }
+        .movement-card h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .movement-card p {
+            color: #666;
+        }
+        .stock-info {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+        .new-item-form {
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .filter-container {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .print-button {
+            margin-bottom: 15px;
+        }
+        .device-controls {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .qr-large {
+            width: 150px;
+            height: 150px;
+            margin: 10px auto;
+            display: block;
+        }
+        .item-qr {
+            text-align: center;
+            margin: 10px 0;
+        }
+        .text-warning {
+            color: #dc3545;
+            font-style: italic;
+        }
+        .delete-confirm {
+            background-color: #ffecec;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 3px solid #dc3545;
+        }
+        .age-filter {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .age-filter label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        .google-form-link {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e6f7ff;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+        }
+        .exit-options {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .exit-option {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .exit-option input {
+            margin-right: 10px;
+        }
+        #delete-confirm {
+            display: none;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+            border-left: 4px solid #f44336;
+        }
+        .sync-section {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .action-buttons button {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h1>Inventario Biomédico</h1>
+        <p>Sistema de gestión para insumos médicos con control de entradas y salidas</p>
+        
+        <div class="sync-section">
+            <h3>Sincronización con Google Forms</h3>
+            <p>Actualiza el inventario desde tu teléfono usando nuestro formulario externo:</p>
+            <button onclick="syncWithGoogleForms()">Sincronizar Ahora</button>
+            <div class="google-form-link">
+                <strong>Formulario para agregar insumos:</strong> 
+                <a id="google-form-link" href="#" target="_blank">Abrir en teléfono</a>
+            </div>
+            <div id="sync-status" class="alert" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Escáner QR</h2>
+        <div class="device-controls">
+            <button id="connect-btn" onclick="connectSerialDevice()">Conectar Lector Externo</button>
+            <span id="device-status">Dispositivo no conectado</span>
+        </div>
+        <div id="qr-reader"></div>
+        <div id="qr-result"></div>
+    </div>
+
+    <div class="section">
+        <h2>Movimientos de Inventario</h2>
+        
+        <div class="movement-type">
+            <div class="movement-card entry" onclick="showEntryForm()">
+                <h3>Entrada de Materiales</h3>
+                <p>Registrar nuevos insumos o aumentar existencias</p>
+            </div>
+            <div class="movement-card exit" onclick="showExitForm()">
+                <h3>Salida de Materiales</h3>
+                <p>Registrar retiro de insumos del inventario</p>
+            </div>
+        </div>
+        
+        <!-- Formulario de Entrada -->
+        <div id="entry-form" class="tab-content">
+            <div id="entry-process" class="process-container" style="display: none;">
+                <h3>Entrada en proceso</h3>
+                <div id="entry-items"></div>
+                <button class="success-btn" onclick="finalizeEntry()">Finalizar Entrada</button>
+                <button class="secondary" onclick="addMoreEntryItem()">Agregar otro insumo</button>
+            </div>
+            
+            <div id="entry-input-form">
+                <div class="form-group">
+                    <label for="supplier">Proveedor:</label>
+                    <input type="text" id="supplier" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="invoice">N° Factura/Remisión:</label>
+                    <input type="text" id="invoice" required>
+                </div>
+                
+                <h3>Agregar Insumo</h3>
+                <div class="form-group">
+                    <label>¿El insumo existe en el inventario?</label>
+                    <div>
+                        <input type="radio" id="existing-item-yes" name="existing-item" value="yes" checked onclick="toggleNewItemForm(false)">
+                        <label for="existing-item-yes" style="display: inline;">Sí</label>
+                        <input type="radio" id="existing-item-no" name="existing-item" value="no" onclick="toggleNewItemForm(true)">
+                        <label for="existing-item-no" style="display: inline;">No, es un nuevo insumo</label>
+                    </div>
+                </div>
+                
+                <div id="existing-item-form">
+                    <div class="form-group">
+                        <label for="entry-item-id">ID del Insumo:</label>
+                        <input type="text" id="entry-item-id" required>
+                    </div>
+                    
+                    <div id="entry-stock-info" class="stock-info" style="display: none;">
+                        <strong>Información de Stock:</strong>
+                        <div id="entry-stock-details"></div>
+                    </div>
+                </div>
+                
+                <div id="new-item-form" class="new-item-form" style="display: none;">
+                    <h4>Información del nuevo insumo</h4>
+                    <div class="form-group">
+                        <label for="new-item-type">Tipo:</label>
+                        <input type="text" id="new-item-type" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-item-brand">Marca:</label>
+                        <input type="text" id="new-item-brand" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-item-model">Modelo:</label>
+                        <input type="text" id="new-item-model">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-item-size">Tamaño:</label>
+                        <input type="text" id="new-item-size">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-item-age-group">Grupo etario:</label>
+                        <select id="new-item-age-group">
+                            <option value="ADULTO">Adulto</option>
+                            <option value="PEDIATRICO">Pediatrico</option>
+                            <option value="NEONATAL">Neonatal</option>
+                            <option value="UNIVERSAL">Universal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-item-min">Stock mínimo:</label>
+                        <input type="number" id="new-item-min" min="1" value="5">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="entry-quantity">Cantidad:</label>
+                    <input type="number" id="entry-quantity" min="1" required>
+                </div>
+                
+                <button class="success-btn" onclick="addEntryItem()">Agregar Insumo</button>
+                <button class="secondary" onclick="cancelEntry()">Cancelar</button>
+            </div>
+        </div>
+        
+        <!-- Formulario de Salida -->
+        <div id="exit-form" class="tab-content">
+            <div id="exit-process" class="process-container" style="display: none;">
+                <h3>Salida en proceso</h3>
+                <div id="exit-items"></div>
+                <button class="danger" onclick="finalizeExit()">Finalizar Salida</button>
+                <button class="secondary" onclick="addMoreExitItem()">Agregar otro insumo</button>
+            </div>
+            
+            <div id="exit-input-form">
+                <div class="form-group">
+                    <label for="engineer">Responsable:</label>
+                    <input type="text" id="engineer" required>
+                </div>
+                
+                <h3>Retirar Insumo</h3>
+                <div class="form-group">
+                    <label for="exit-item-id">ID del Insumo:</label>
+                    <input type="text" id="exit-item-id" required>
+                </div>
+                
+                <div id="exit-stock-info" class="stock-info" style="display: none;">
+                    <strong>Información de Stock:</strong>
+                    <div id="exit-stock-details"></div>
+                </div>
+                
+                <div class="exit-options">
+                    <h4>Tipo de salida:</h4>
+                    <div class="exit-option">
+                        <input type="radio" id="exit-withdraw" name="exit-type" value="withdraw" checked onclick="toggleExitType(false)">
+                        <label for="exit-withdraw">Retirar cantidad específica</label>
+                    </div>
+                    <div class="exit-option">
+                        <input type="radio" id="exit-delete" name="exit-type" value="delete" onclick="toggleExitType(true)">
+                        <label for="exit-delete">Eliminar insumo del inventario</label>
+                    </div>
+                </div>
+                
+                <div id="exit-quantity-container" class="form-group">
+                    <label for="exit-quantity">Cantidad a retirar:</label>
+                    <input type="number" id="exit-quantity" min="1" required>
+                </div>
+                
+                <div id="delete-confirm" class="delete-confirm">
+                    <strong>¡ADVERTENCIA!</strong> Esta acción eliminará permanentemente el insumo del inventario.
+                </div>
+                
+                <button id="exit-action-button" class="danger" onclick="addExitItem()">Retirar Insumo</button>
+                <button class="secondary" onclick="cancelExit()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="document-process">
+        <h2 id="document-title"></h2>
+        <div id="document-number"></div>
+        <div id="document-date"></div>
+        <div id="document-info"></div>
+        <h3>Detalle de Insumos:</h3>
+        <div id="document-items"></div>
+        <div id="document-barcode" class="barcode-container"></div>
+        <button onclick="printDocument()">Imprimir Documento</button>
+        <button class="secondary" onclick="closeDocument()">Cerrar</button>
+    </div>
+
+    <div class="section">
+        <h2>Alertas de Stock</h2>
+        <div id="alerts-container"></div>
+    </div>
+
+    <div class="section">
+        <h2>Lista Completa de Insumos</h2>
+        <div class="filter-container">
+            <div class="filter-group">
+                <label for="filter-type">Tipo:</label>
+                <select id="filter-type" onchange="filterInventory()">
+                    <option value="">Todos</option>
+                    <!-- Las opciones se llenarán dinámicamente -->
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="filter-brand">Marca:</label>
+                <select id="filter-brand" onchange="filterInventory()">
+                    <option value="">Todas</option>
+                    <!-- Las opciones se llenarán dinámicamente -->
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Grupo etario:</label>
+                <div class="age-filter">
+                    <label><input type="checkbox" name="age-group" value="ADULTO" checked onchange="filterInventory()"> Adulto</label>
+                    <label><input type="checkbox" name="age-group" value="PEDIATRICO" checked onchange="filterInventory()"> Pediatrico</label>
+                    <label><input type="checkbox" name="age-group" value="NEONATAL" checked onchange="filterInventory()"> Neonatal</label>
+                    <label><input type="checkbox" name="age-group" value="UNIVERSAL" checked onchange="filterInventory()"> Universal</label>
+                </div>
+            </div>
+            
+            <button class="print-button" onclick="printInventoryTable()">Imprimir Lista</button>
+            <button class="secondary" onclick="resetFilters()">Limpiar Filtros</button>
+        </div>
+        <table id="inventory-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tipo</th>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>Tamaño</th>
+                    <th>Grupo</th>
+                    <th>Existencias</th>
+                    <th>Mínimo</th>
+                    <th>QR</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="inventory-body">
+                <!-- Datos se cargarán aquí -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Historial de Movimientos</h2>
+        <table id="movement-history">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Insumo</th>
+                    <th>Cantidad</th>
+                    <th>Responsable</th>
+                    <th>Documento</th>
+                    <th>Folio</th>
+                </tr>
+            </thead>
+            <tbody id="history-body">
+                <!-- Datos se cargarán aquí -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Variables para el control del dispositivo serial
+        let serialPort = null;
+        let reader = null;
+        
+        // Base de datos inicial
+        let inventory = [];
+        let movementHistory = [];
+        
+        // URL del Google Forms y Script (debes reemplazar con tus URLs reales)
+        const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSewLIfwu5qtYNcAbEgCAF3WS5BZ3tPTGoH6ThoAK6vdhMPDOg/viewform?usp=header";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPeh3XsWlcSkICoe-xOuMwKzTsJLAUHX4xXrQPNsCpnBufx0V_LZ6wyOqdN9IE-n8s/exec";
+        
+        // Configuración inicial
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar enlace del formulario
+            document.getElementById('google-form-link').href = GOOGLE_FORM_URL;
+            
+            // Verificar compatibilidad con Web Serial API
+            if (!('serial' in navigator)) {
+                document.getElementById('connect-btn').style.display = 'none';
+                document.getElementById('device-status').textContent = "Navegador no compatible con dispositivos seriales";
+            }
+            
+            loadDataFromLocalStorage();
+            updateInventoryTable();
+            updateAlerts();
+            updateMovementHistory();
+            initScanner();
+            generateAllQR();
+            hideAllForms();
+            populateFilters();
+            
+            // Event listeners para mostrar stock al ingresar ID
+            document.getElementById('entry-item-id').addEventListener('change', showEntryStockInfo);
+            document.getElementById('exit-item-id').addEventListener('change', showExitStockInfo);
+        });
+
+        // ========== FUNCIONES DE ALMACENAMIENTO ==========
+        
+        // Cargar datos del localStorage al iniciar
+        function loadDataFromLocalStorage() {
+            const savedInventory = localStorage.getItem('biomedicalInventory');
+            const savedHistory = localStorage.getItem('biomedicalMovementHistory');
+            
+            if (savedInventory) {
+                inventory = JSON.parse(savedInventory);
+            } else {
+                // Datos iniciales si no hay nada guardado
+                inventory = [
+                    {id: "1.10", tipo: "MANGUERA DE PNI", marca: "MINDRAY", modelo: "MEC 2000", tamaño: "ADULTO", grupo: "ADULTO", existencias: 60, minimo: 10},
+                    {id: "1.20", tipo: "MANGUERA DE PNI", marca: "MINDRAY", modelo: "MEC 2000", tamaño: "NEONATAL", grupo: "NEONATAL", existencias: 14, minimo: 7},
+                    {id: "2.10", tipo: "SENSOR DE TEMP", marca: "MINDRAY", modelo: "BENEVIEW T5 Y T8", tamaño: "ADULTO", grupo: "ADULTO", existencias: 0, minimo: 2},
+                    {id: "3.10", tipo: "CATETER VENOSO", marca: "BD", modelo: "ANGIOCATH", tamaño: "18G", grupo: "ADULTO", existencias: 25, minimo: 15},
+                    {id: "3.20", tipo: "CATETER VENOSO", marca: "BD", modelo: "ANGIOCATH", tamaño: "24G", grupo: "PEDIATRICO", existencias: 18, minimo: 10},
+                    {id: "4.10", tipo: "MASCARILLA OXIGENO", marca: "HERSILL", modelo: "STANDARD", tamaño: "ADULTO", grupo: "ADULTO", existencias: 30, minimo: 20},
+                    {id: "4.20", tipo: "MASCARILLA OXIGENO", marca: "HERSILL", modelo: "STANDARD", tamaño: "PEDIATRICO", grupo: "PEDIATRICO", existencias: 15, minimo: 10},
+                    {id: "5.10", tipo: "ELECTRODO ECG", marca: "3M", modelo: "RED DOT", tamaño: "ADULTO", grupo: "ADULTO", existencias: 120, minimo: 50},
+                    {id: "5.20", tipo: "ELECTRODO ECG", marca: "3M", modelo: "RED DOT", tamaño: "PEDIATRICO", grupo: "PEDIATRICO", existencias: 80, minimo: 30},
+                    {id: "6.10", tipo: "JERINGA", marca: "BD", modelo: "PLASTIPAK", tamaño: "10ml", grupo: "UNIVERSAL", existencias: 200, minimo: 100},
+                ];
+            }
+            
+            if (savedHistory) {
+                movementHistory = JSON.parse(savedHistory);
+            }
+        }
+        
+        // Guardar datos en localStorage
+        function saveDataToLocalStorage() {
+            localStorage.setItem('biomedicalInventory', JSON.stringify(inventory));
+            localStorage.setItem('biomedicalMovementHistory', JSON.stringify(movementHistory));
+        }
+        
+        // ========== FUNCIONES DE SINCRONIZACIÓN CON GOOGLE FORMS ==========
+        
+        // Sincronizar con Google Forms
+        async function syncWithGoogleForms() {
+            const statusElement = document.getElementById('sync-status');
+            statusElement.style.display = 'block';
+            statusElement.textContent = "Sincronizando con Google Forms...";
+            statusElement.className = "alert";
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                const newItems = await response.json();
+                
+                if (newItems && newItems.length > 0) {
+                    let addedItems = 0;
+                    let updatedItems = 0;
+                    
+                    // Procesar nuevos items del formulario
+                    newItems.forEach(newItem => {
+                        // Verificar si el item ya existe
+                        const existingIndex = inventory.findIndex(item => item.id === newItem.id);
+                        
+                        if (existingIndex >= 0) {
+                            // Actualizar existencias si el item ya existe
+                            inventory[existingIndex].existencias += parseInt(newItem.cantidad) || 0;
+                            updatedItems++;
+                        } else {
+                            // Agregar nuevo item al inventario
+                            inventory.push({
+                                id: newItem.id,
+                                tipo: newItem.tipo,
+                                marca: newItem.marca,
+                                modelo: newItem.modelo || '',
+                                tamaño: newItem.tamaño || '',
+                                grupo: newItem.grupo || 'UNIVERSAL',
+                                existencias: parseInt(newItem.cantidad) || 0,
+                                minimo: parseInt(newItem.minimo) || 5
+                            });
+                            addedItems++;
+                        }
+                    });
+                    
+                    // Actualizar la interfaz
+                    updateInventoryTable();
+                    updateAlerts();
+                    saveDataToLocalStorage();
+                    
+                    statusElement.textContent = `Sincronización exitosa: ${addedItems} nuevos insumos, ${updatedItems} insumos actualizados`;
+                    statusElement.className = "alert success";
+                } else {
+                    statusElement.textContent = "No hay nuevos insumos para sincronizar";
+                    statusElement.className = "alert";
+                }
+            } catch (error) {
+                console.error('Error al sincronizar con Google Forms:', error);
+                statusElement.textContent = `Error al sincronizar: ${error.message}`;
+                statusElement.className = "alert critical";
+            }
+        }
+        
+        // ========== FUNCIONES DE GESTIÓN DE INVENTARIO ==========
+        
+        // Actualizar tabla de inventario
+        function updateInventoryTable() {
+            const tbody = document.getElementById('inventory-body');
+            tbody.innerHTML = '';
+            
+            inventory.forEach(item => {
+                const row = document.createElement('tr');
+                
+                // Resaltar si el stock es bajo o crítico
+                if (item.existencias <= item.minimo) {
+                    row.style.backgroundColor = item.existencias === 0 ? '#ffdddd' : '#fff4dd';
+                }
+                
+                row.innerHTML = `
+                    <td>${item.id}</td>
+                    <td>${item.tipo}</td>
+                    <td>${item.marca}</td>
+                    <td>${item.modelo || 'N/A'}</td>
+                    <td>${item.tamaño || 'N/A'}</td>
+                    <td>${item.grupo || 'N/A'}</td>
+                    <td>${item.existencias}</td>
+                    <td>${item.minimo}</td>
+                    <td><div id="qr-${item.id}" class="qr-container"></div></td>
+                    <td class="action-buttons">
+                        <button class="danger" onclick="deleteItem('${item.id}')">Eliminar</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            // Generar códigos QR para los items
+            generateAllQR();
+            
+            // Actualizar filtros disponibles
+            populateFilters();
+            
+            // Aplicar filtros actuales
+            filterInventory();
+        }
+        
+        // Llenar los filtros disponibles
+        function populateFilters() {
+            const typeFilter = document.getElementById('filter-type');
+            const brandFilter = document.getElementById('filter-brand');
+            
+            // Obtener tipos y marcas únicas
+            const types = [...new Set(inventory.map(item => item.tipo))];
+            const brands = [...new Set(inventory.map(item => item.marca))];
+            
+            // Limpiar filtros manteniendo la primera opción
+            while (typeFilter.options.length > 1) typeFilter.remove(1);
+            while (brandFilter.options.length > 1) brandFilter.remove(1);
+            
+            // Agregar tipos
+            types.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                typeFilter.appendChild(option);
+            });
+            
+            // Agregar marcas
+            brands.forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand;
+                option.textContent = brand;
+                brandFilter.appendChild(option);
+            });
+        }
+        
+        // Filtrar inventario según los filtros seleccionados
+        function filterInventory() {
+            const typeFilter = document.getElementById('filter-type').value;
+            const brandFilter = document.getElementById('filter-brand').value;
+            const ageCheckboxes = document.querySelectorAll('input[name="age-group"]:checked');
+            const selectedAgeGroups = Array.from(ageCheckboxes).map(cb => cb.value);
+            
+            const rows = document.getElementById('inventory-body').querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                const rowType = row.cells[1].textContent;
+                const rowBrand = row.cells[2].textContent;
+                const rowAgeGroup = row.cells[5].textContent;
+                
+                const typeMatch = !typeFilter || rowType === typeFilter;
+                const brandMatch = !brandFilter || rowBrand === brandFilter;
+                const ageMatch = selectedAgeGroups.length === 0 || selectedAgeGroups.includes(rowAgeGroup);
+                
+                if (typeMatch && brandMatch && ageMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        // Restablecer todos los filtros
+        function resetFilters() {
+            document.getElementById('filter-type').value = '';
+            document.getElementById('filter-brand').value = '';
+            
+            // Marcar todos los checkboxes de grupo etario
+            document.querySelectorAll('input[name="age-group"]').forEach(cb => {
+                cb.checked = true;
+            });
+            
+            filterInventory();
+        }
+        
+        // ========== FUNCIONES DE CÓDIGOS QR Y BARRAS ==========
+        
+        // Generar código QR
+        function generateQR(elementId, text, size = 80) {
+            const container = document.getElementById(elementId);
+            if (!container) return;
+            
+            // Limpiar contenedor primero
+            container.innerHTML = '';
+            
+            QRCode.toCanvas(container, text, { 
+                width: size,
+                margin: 1,
+                color: {
+                    dark: '#000000',
+                    light: '#ffffff'
+                }
+            }, function (error) {
+                if (error) console.error(error);
+            });
+        }
+        
+        // Generar texto para QR de un item
+        function generateItemQR(item) {
+            return `
+                ID:${item.id}
+                Tipo:${item.tipo}
+                Marca:${item.marca}
+                Modelo:${item.modelo || 'N/A'}
+                Tamaño:${item.tamaño || 'N/A'}
+                Grupo:${item.grupo || 'N/A'}
+                Stock:${item.existencias}
+                Mínimo:${item.minimo}
+                Fecha:${new Date().toISOString().split('T')[0]}
+            `;
+        }
+        
+        // Generar códigos QR para todos los items
+        function generateAllQR() {
+            inventory.forEach(item => {
+                const qrText = generateItemQR(item);
+                generateQR(`qr-${item.id}`, qrText, 80);
+            });
+        }
+        
+        // Generar ID aleatorio para nuevos insumos
+        function generateRandomId() {
+            const unidad = Math.floor(Math.random() * 9) + 1;
+            const decimales = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+            return `${unidad}.${decimales}`;
+        }
+        
+        // ========== FUNCIONES DE ESCÁNER QR ==========
+        
+        // Inicializar escáner QR
+        function initScanner() {
+            const html5QrCode = new Html5Qrcode("qr-reader");
+            
+            html5QrCode.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: 250
+                },
+                qrCodeMessage => {
+                    // Detener escaneo después de éxito
+                    html5QrCode.stop();
+                    
+                    // Mostrar resultado
+                    document.getElementById('qr-result').innerHTML = `
+                        <div class="alert success">Código escaneado: <strong>${qrCodeMessage}</strong></div>
+                        <button onclick="initScanner()">Reiniciar escáner</button>
+                    `;
+                    
+                    // Buscar insumo (el código QR contiene el ID)
+                    const idMatch = qrCodeMessage.match(/ID:([^|\n]+)/);
+                    const id = idMatch ? idMatch[1].trim() : qrCodeMessage.trim();
+                    
+                    // Poner el ID en el campo correspondiente según el formulario activo
+                    if (document.getElementById('entry-form').style.display === 'block') {
+                        document.getElementById('entry-item-id').value = id;
+                        showEntryStockInfo();
+                        document.getElementById('entry-quantity').focus();
+                    } else if (document.getElementById('exit-form').style.display === 'block') {
+                        document.getElementById('exit-item-id').value = id;
+                        showExitStockInfo();
+                        document.getElementById('exit-quantity').focus();
+                    }
+                },
+                errorMessage => {
+                    // console.error(errorMessage);
+                }
+            ).catch(err => {
+                console.error(`Error al iniciar escáner: ${err}`);
+                document.getElementById('qr-result').innerHTML = `
+                    <div class="alert critical">Error al iniciar escáner: ${err.message}</div>
+                `;
+            });
+        }
+        
+        // ========== FUNCIONES DE ENTRADA/SALIDA DE MATERIALES ==========
+        
+        // Variables para el proceso actual
+        let currentProcess = {
+            type: "", // "entry" o "exit"
+            items: [],
+            supplier: "",
+            invoice: "",
+            engineer: "",
+            documentNumber: "",
+            orderNumber: ""
+        };
+        
+        // Mostrar/ocultar formularios
+        function hideAllForms() {
+            document.getElementById('entry-form').style.display = 'none';
+            document.getElementById('exit-form').style.display = 'none';
+        }
+        
+        function showEntryForm() {
+            hideAllForms();
+            document.getElementById('entry-form').style.display = 'block';
+            document.getElementById('entry-process').style.display = 'none';
+            document.getElementById('entry-input-form').style.display = 'block';
+            resetEntryForm();
+        }
+        
+        function showExitForm() {
+            hideAllForms();
+            document.getElementById('exit-form').style.display = 'block';
+            document.getElementById('exit-process').style.display = 'none';
+            document.getElementById('exit-input-form').style.display = 'block';
+            resetExitForm();
+        }
+        
+        // Reiniciar formularios
+        function resetEntryForm() {
+            document.getElementById('supplier').value = '';
+            document.getElementById('invoice').value = '';
+            document.getElementById('entry-item-id').value = '';
+            document.getElementById('entry-quantity').value = '';
+            document.getElementById('entry-stock-info').style.display = 'none';
+            document.getElementById('existing-item-yes').checked = true;
+            document.getElementById('new-item-form').style.display = 'none';
+            document.getElementById('existing-item-form').style.display = 'block';
+            currentProcess = {
+                type: "entry",
+                items: [],
+                supplier: "",
+                invoice: "",
+                engineer: "",
+                documentNumber: "",
+                orderNumber: ""
+            };
+        }
+        
+        function resetExitForm() {
+            document.getElementById('engineer').value = '';
+            document.getElementById('exit-item-id').value = '';
+            document.getElementById('exit-quantity').value = '1';
+            document.getElementById('exit-stock-info').style.display = 'none';
+            document.getElementById('exit-withdraw').checked = true;
+            document.getElementById('exit-delete').checked = false;
+            document.getElementById('exit-quantity-container').style.display = 'block';
+            document.getElementById('delete-confirm').style.display = 'none';
+            document.getElementById('exit-action-button').textContent = 'Retirar Insumo';
+            currentProcess = {
+                type: "exit",
+                items: [],
+                supplier: "",
+                invoice: "",
+                engineer: "",
+                documentNumber: "",
+                orderNumber: ""
+            };
+        }
+        
+        // Alternar entre formulario de insumo existente y nuevo
+        function toggleNewItemForm(showNew) {
+            document.getElementById('new-item-form').style.display = showNew ? 'block' : 'none';
+            document.getElementById('existing-item-form').style.display = showNew ? 'none' : 'block';
+        }
+        
+        // Alternar entre retiro normal y eliminación
+        function toggleExitType(isDelete) {
+            document.getElementById('exit-quantity-container').style.display = isDelete ? 'none' : 'block';
+            document.getElementById('delete-confirm').style.display = isDelete ? 'block' : 'none';
+            document.getElementById('exit-action-button').textContent = isDelete ? 'Eliminar Definitivamente' : 'Retirar Insumo';
+        }
+        
+        // Mostrar información de stock para entrada
+        function showEntryStockInfo() {
+            const itemId = document.getElementById('entry-item-id').value;
+            const stockInfo = document.getElementById('entry-stock-info');
+            const stockDetails = document.getElementById('entry-stock-details');
+            
+            if (!itemId) {
+                stockInfo.style.display = 'none';
+                return;
+            }
+            
+            const item = inventory.find(i => i.id === itemId);
+            
+            if (item) {
+                stockDetails.innerHTML = `
+                    <strong>Tipo:</strong> ${item.tipo}<br>
+                    <strong>Marca:</strong> ${item.marca}<br>
+                    <strong>Modelo:</strong> ${item.modelo || 'N/A'}<br>
+                    <strong>Tamaño:</strong> ${item.tamaño || 'N/A'}<br>
+                    <strong>Grupo:</strong> ${item.grupo || 'N/A'}<br>
+                    <strong>Stock actual:</strong> ${item.existencias}<br>
+                    <strong>Stock mínimo:</strong> ${item.minimo}
+                `;
+                stockInfo.style.display = 'block';
+            } else {
+                stockDetails.innerHTML = 'Insumo no encontrado en el inventario';
+                stockInfo.style.display = 'block';
+            }
+        }
+        
+        // Mostrar información de stock para salida
+        function showExitStockInfo() {
+            const itemId = document.getElementById('exit-item-id').value;
+            const stockInfo = document.getElementById('exit-stock-info');
+            const stockDetails = document.getElementById('exit-stock-details');
+            
+            if (!itemId) {
+                stockInfo.style.display = 'none';
+                return;
+            }
+            
+            const item = inventory.find(i => i.id === itemId);
+            
+            if (item) {
+                stockDetails.innerHTML = `
+                    <strong>Tipo:</strong> ${item.tipo}<br>
+                    <strong>Marca:</strong> ${item.marca}<br>
+                    <strong>Modelo:</strong> ${item.modelo || 'N/A'}<br>
+                    <strong>Tamaño:</strong> ${item.tamaño || 'N/A'}<br>
+                    <strong>Grupo:</strong> ${item.grupo || 'N/A'}<br>
+                    <strong>Stock actual:</strong> ${item.existencias}<br>
+                    <strong>Stock mínimo:</strong> ${item.minimo}
+                `;
+                stockInfo.style.display = 'block';
+            } else {
+                stockDetails.innerHTML = 'Insumo no encontrado en el inventario';
+                stockInfo.style.display = 'block';
+            }
+        }
+        
+        // ========== FUNCIONES DE GESTIÓN DE ENTRADAS ==========
+        
+        // Agregar item a entrada
+        function addEntryItem() {
+            const isNewItem = document.getElementById('existing-item-no').checked;
+            let itemId, itemName, brand, model, size, minStock, ageGroup;
+            
+            if (isNewItem) {
+                // Validar campos para nuevo insumo
+                itemName = document.getElementById('new-item-type').value;
+                brand = document.getElementById('new-item-brand').value;
+                model = document.getElementById('new-item-model').value;
+                size = document.getElementById('new-item-size').value;
+                ageGroup = document.getElementById('new-item-age-group').value;
+                minStock = parseInt(document.getElementById('new-item-min').value);
+                
+                if (!itemName || !brand || !minStock) {
+                    alert('Por favor complete los campos obligatorios para el nuevo insumo');
+                    return;
+                }
+                
+                // Generar ID aleatorio para el nuevo insumo
+                itemId = generateRandomId();
+            } else {
+                // Para insumo existente
+                itemId = document.getElementById('entry-item-id').value;
+                if (!itemId) {
+                    alert('Por favor ingrese el ID del insumo');
+                    return;
+                }
+                
+                const inventoryItem = inventory.find(item => item.id === itemId);
+                if (!inventoryItem) {
+                    alert('Insumo no encontrado. Si es un nuevo insumo, seleccione "No, es un nuevo insumo"');
+                    return;
+                }
+                
+                itemName = inventoryItem.tipo;
+                brand = inventoryItem.marca;
+                model = inventoryItem.modelo;
+                size = inventoryItem.tamaño;
+                ageGroup = inventoryItem.grupo;
+                minStock = inventoryItem.minimo;
+            }
+            
+            const quantity = parseInt(document.getElementById('entry-quantity').value);
+            
+            if (!quantity || quantity < 1) {
+                alert('Por favor ingrese una cantidad válida (mayor a 0)');
+                return;
+            }
+            
+            // Solo guardar proveedor y factura la primera vez
+            if (currentProcess.items.length === 0) {
+                currentProcess.supplier = document.getElementById('supplier').value;
+                currentProcess.invoice = document.getElementById('invoice').value;
+                
+                if (!currentProcess.supplier || !currentProcess.invoice) {
+                    alert('Por favor complete los datos de proveedor y factura');
+                    return;
+                }
+                
+                // Generar folio único para la orden de entrada
+                const date = new Date();
+                currentProcess.orderNumber = `OC-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+            }
+            
+            // Si es un nuevo insumo, agregarlo al inventario
+            if (isNewItem) {
+                const newItem = {
+                    id: itemId,
+                    tipo: itemName,
+                    marca: brand,
+                    modelo: model,
+                    tamaño: size,
+                    grupo: ageGroup,
+                    existencias: quantity,
+                    minimo: minStock
+                };
+                
+                inventory.push(newItem);
+            }
+            
+            // Agregar a la entrada actual
+            currentProcess.items.push({
+                itemId: itemId,
+                itemName: itemName,
+                quantity: quantity,
+                brand: brand,
+                model: model,
+                size: size,
+                group: ageGroup,
+                isNew: isNewItem
+            });
+            
+            // Mostrar sección de entrada actual
+            document.getElementById('entry-process').style.display = 'block';
+            document.getElementById('entry-input-form').style.display = 'none';
+            
+            // Actualizar lista de items
+            updateProcessItems();
+        }
+        
+        // Agregar otro item a entrada
+        function addMoreEntryItem() {
+            document.getElementById('entry-input-form').style.display = 'block';
+            document.getElementById('entry-item-id').value = '';
+            document.getElementById('entry-quantity').value = '';
+            document.getElementById('entry-stock-info').style.display = 'none';
+            document.getElementById('existing-item-yes').checked = true;
+            document.getElementById('new-item-form').style.display = 'none';
+            document.getElementById('existing-item-form').style.display = 'block';
+            document.getElementById('entry-item-id').focus();
+        }
+        
+        // Finalizar entrada
+        function finalizeEntry() {
+            if (currentProcess.items.length === 0) {
+                alert('No hay insumos para registrar en esta entrada');
+                return;
+            }
+            
+            // Generar folio único para la entrada solo al finalizar
+            const date = new Date();
+            currentProcess.documentNumber = `ENT-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+            
+            // Registrar cada item en el historial y actualizar inventario
+            currentProcess.items.forEach(item => {
+                if (!item.isNew) { // Solo actualizar stock si no es nuevo (ya se actualizó al agregar)
+                    const inventoryItem = inventory.find(i => i.id === item.itemId);
+                    if (inventoryItem) {
+                        inventoryItem.existencias += item.quantity;
+                    }
+                }
+                
+                const movement = {
+                    date: date.toLocaleString(),
+                    type: "ENTRADA",
+                    itemId: item.itemId,
+                    itemName: item.itemName,
+                    quantity: item.quantity,
+                    responsible: currentProcess.supplier,
+                    document: `Factura: ${currentProcess.invoice}`,
+                    documentNumber: currentProcess.documentNumber,
+                    orderNumber: currentProcess.orderNumber
+                };
+                
+                movementHistory.unshift(movement);
+            });
+            
+            // Actualizar interfaz
+            updateInventoryTable();
+            updateAlerts();
+            updateMovementHistory();
+            
+            // Mostrar documento de entrada
+            showProcessDocument();
+            
+            // Reiniciar proceso actual
+            resetCurrentProcess();
+            
+            // Ocultar formulario
+            document.getElementById('entry-process').style.display = 'none';
+            document.getElementById('entry-form').style.display = 'none';
+            
+            // Guardar cambios
+            saveDataToLocalStorage();
+        }
+        
+        // Cancelar entrada
+        function cancelEntry() {
+            if (confirm('¿Está seguro que desea cancelar esta entrada?')) {
+                resetCurrentProcess();
+                document.getElementById('entry-process').style.display = 'none';
+                document.getElementById('entry-form').style.display = 'none';
+            }
+        }
+        
+        // ========== FUNCIONES DE GESTIÓN DE SALIDAS ==========
+        
+        // Agregar item a salida
+        function addExitItem() {
+            const itemId = document.getElementById('exit-item-id').value;
+            const quantity = parseInt(document.getElementById('exit-quantity').value);
+            const isDelete = document.getElementById('exit-delete').checked;
+    
+            if (!itemId) {
+                alert('Por favor ingrese el ID del insumo');
+                return;
+            }
+    
+            const inventoryItem = inventory.find(item => item.id === itemId);
+    
+            if (!inventoryItem) {
+                alert('❌ Insumo no encontrado');
+                return;
+            }
+    
+            if (!isDelete && (!quantity || quantity < 1)) {
+                alert('Por favor ingrese una cantidad válida (mayor a 0)');
+                return;
+            }
+    
+            if (!isDelete && inventoryItem.existencias < quantity) {
+                alert('❌ Stock insuficiente');
+                return;
+            }
+    
+            // Solo guardar ingeniero la primera vez
+            if (currentProcess.items.length === 0) {
+                currentProcess.engineer = document.getElementById('engineer').value;
+        
+                if (!currentProcess.engineer) {
+                    alert('Por favor complete el dato de responsable');
+                    return;
+                }
+        
+                // Generar folio único para la orden de salida
+                const date = new Date();
+                currentProcess.orderNumber = `OS-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+            }
+    
+            // Confirmación adicional para eliminación
+            if (isDelete) {
+                if (!confirm(`¿Está seguro que desea ELIMINAR DEFINITIVAMENTE el insumo ${inventoryItem.tipo} (ID: ${inventoryItem.id})? Esta acción no se puede deshacer.`)) {
+                return;
+                }
+            }
+    
+            // Agregar a la salida actual
+            currentProcess.items.push({
+                itemId: inventoryItem.id,
+                itemName: inventoryItem.tipo,
+                quantity: isDelete ? inventoryItem.existencias : quantity,
+                brand: inventoryItem.marca,
+                model: inventoryItem.modelo,
+                size: inventoryItem.tamaño,
+                group: inventoryItem.grupo,
+                isDelete: isDelete
+            });
+    
+            // Mostrar sección de salida actual
+            document.getElementById('exit-process').style.display = 'block';
+            document.getElementById('exit-input-form').style.display = 'none';
+    
+            // Actualizar lista de items
+            updateProcessItems();
+        }
+        
+        // Agregar otro item a salida
+        function addMoreExitItem() {
+            document.getElementById('exit-input-form').style.display = 'block';
+            document.getElementById('exit-item-id').value = '';
+            document.getElementById('exit-quantity').value = '1';
+            document.getElementById('exit-stock-info').style.display = 'none';
+            document.getElementById('exit-withdraw').checked = true;
+            document.getElementById('exit-delete').checked = false;
+            document.getElementById('exit-quantity-container').style.display = 'block';
+            document.getElementById('delete-confirm').style.display = 'none';
+            document.getElementById('exit-item-id').focus();
+        }
+        
+        // Finalizar salida
+        function finalizeExit() {
+            if (currentProcess.items.length === 0) {
+                alert('No hay insumos para registrar en esta salida');
+                return;
+            }
+    
+            // Verificar si hay eliminaciones
+            const hasDeletions = currentProcess.items.some(item => item.isDelete);
+    
+            // Generar folio único para la salida solo al finalizar
+            const date = new Date();
+            currentProcess.documentNumber = `SAL-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    
+            // Registrar cada item en el historial y actualizar inventario
+            currentProcess.items.forEach(item => {
+                const inventoryItemIndex = inventory.findIndex(i => i.id === item.itemId);
+        
+                if (inventoryItemIndex !== -1) {
+                    if (item.isDelete) {
+                        // Eliminar definitivamente el insumo
+                        inventory.splice(inventoryItemIndex, 1);
+                    } else {
+                        // Solo reducir el stock
+                        inventory[inventoryItemIndex].existencias -= item.quantity;
+                    }
+            
+                    const movement = {
+                        date: date.toLocaleString(),
+                        type: item.isDelete ? "BAJA DEFINITIVA" : "SALIDA",
+                        itemId: item.itemId,
+                        itemName: item.itemName,
+                        quantity: item.quantity,
+                        responsible: currentProcess.engineer,
+                        document: `Responsable: ${currentProcess.engineer}`,
+                        documentNumber: currentProcess.documentNumber,
+                        orderNumber: currentProcess.orderNumber,
+                        isDelete: item.isDelete
+                    };
+            
+                    movementHistory.unshift(movement);
+                }
+            });
+    
+            // Actualizar interfaz
+            updateInventoryTable();
+            updateAlerts();
+            updateMovementHistory();
+            populateFilters(); // Actualizar filtros por si se eliminó algún tipo o marca
+    
+            // Mostrar documento de salida
+            showProcessDocument();
+    
+            // Reiniciar proceso actual
+            resetCurrentProcess();
+    
+            // Ocultar formulario
+            document.getElementById('exit-process').style.display = 'none';
+            document.getElementById('exit-form').style.display = 'none';
+    
+            // Guardar cambios
+            saveDataToLocalStorage();
+        }
+        
+        // Cancelar salida
+        function cancelExit() {
+            if (confirm('¿Está seguro que desea cancelar esta salida?')) {
+                resetCurrentProcess();
+                document.getElementById('exit-process').style.display = 'none';
+                document.getElementById('exit-form').style.display = 'none';
+            }
+        }
+        
+        // Eliminar insumo directamente desde la tabla
+        function deleteItem(itemId) {
+            if (!confirm(`¿Está seguro que desea ELIMINAR DEFINITIVAMENTE este insumo? Esta acción no se puede deshacer.`)) {
+                return;
+            }
+            
+            const itemIndex = inventory.findIndex(item => item.id === itemId);
+            if (itemIndex >= 0) {
+                const deletedItem = inventory.splice(itemIndex, 1)[0];
+                
+                // Registrar en el historial
+                const date = new Date();
+                const documentNumber = `BAJA-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+                
+                movementHistory.unshift({
+                    date: date.toLocaleString(),
+                    type: "BAJA DEFINITIVA",
+                    itemId: deletedItem.id,
+                    itemName: deletedItem.tipo,
+                    quantity: deletedItem.existencias,
+                    responsible: "Administrador",
+                    document: "Eliminación directa",
+                    documentNumber: documentNumber,
+                    orderNumber: "N/A"
+                });
+                
+                // Actualizar interfaz
+                updateInventoryTable();
+                updateAlerts();
+                updateMovementHistory();
+                saveDataToLocalStorage();
+                
+                alert(`Insumo ${deletedItem.tipo} (${deletedItem.id}) eliminado permanentemente`);
+            }
+        }
+        
+        // ========== FUNCIONES COMUNES PARA ENTRADA/SALIDA ==========
+        
+        // Actualizar items en proceso
+        function updateProcessItems() {
+            const container = currentProcess.type === "entry" 
+                ? document.getElementById('entry-items') 
+                : document.getElementById('exit-items');
+        
+            container.innerHTML = '';
+    
+            currentProcess.items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'item-process';
+                if (item.isDelete) {
+                    div.style.backgroundColor = '#ffebee';
+                    div.style.borderLeft = '4px solid #f44336';
+                }
+        
+                const qrText = `
+                    ${currentProcess.type === 'entry' ? 'ENTRADA' : (item.isDelete ? 'BAJA' : 'SALIDA')}
+                    ID:${item.itemId}
+                    Item:${item.itemName}
+                    ${item.isDelete ? 'Cantidad:Eliminado' : `Cantidad:${item.quantity}`}
+                    ${item.brand ? `Marca:${item.brand}` : ''}
+                    ${item.model ? `Modelo:${item.model}` : ''}
+                    ${item.size ? `Tamaño:${item.size}` : ''}
+                    ${item.group ? `Grupo:${item.group}` : ''}
+                    Fecha:${new Date().toISOString().split('T')[0]}
+                    Doc:${currentProcess.orderNumber}
+                `;
+        
+                div.innerHTML = `
+                    <strong>${item.itemName} (${item.itemId})</strong>
+                    ${item.isDelete ? '<span style="color: #f44336;"> (BAJA DEFINITIVA)</span>' : ''}<br>
+                    ${item.brand ? `Marca: ${item.brand}<br>` : ''}
+                    ${item.model ? `Modelo: ${item.model}<br>` : ''}
+                    ${item.size ? `Tamaño: ${item.size}<br>` : ''}
+                    ${item.group ? `Grupo: ${item.group}<br>` : ''}
+                    ${item.isDelete ? 'Acción: <strong>Eliminación definitiva</strong>' : `Cantidad: ${item.quantity}`}<br>
+                    ${item.isDelete ? '<div class="text-warning">⚠️ Este insumo será eliminado permanentemente del inventario</div>' : ''}
+                    <div class="item-qr">
+                        <div id="process-qr-${index}"></div>
+                        <small>QR del movimiento</small>
+                    </div>
+                    <svg id="barcode-${currentProcess.type}-${index}" class="barcode"></svg>
+                `;
+        
+                container.appendChild(div);
+        
+                generateQR(`process-qr-${index}`, qrText, 100);
+                JsBarcode(`#barcode-${currentProcess.type}-${index}`, 
+                    `${item.isDelete ? 'DELETE' : 'OUT'}-${item.itemId}-${item.quantity}`, {
+                    format: "CODE128",
+                    lineColor: item.isDelete ? "#f44336" : "#000",
+                    width: 2,
+                    height: 50,
+                    displayValue: true
+                });
+            });
+        }
+        
+        // Reiniciar proceso actual
+        function resetCurrentProcess() {
+            currentProcess = {
+                type: "",
+                items: [],
+                supplier: "",
+                invoice: "",
+                engineer: "",
+                documentNumber: "",
+                orderNumber: ""
+            };
+        }
+        
+        // Mostrar documento de proceso
+        function showProcessDocument() {
+            const date = new Date();
+            const isEntry = currentProcess.type === "entry";
+            
+            document.getElementById('document-title').textContent = isEntry 
+                ? 'COMPROBANTE DE ENTRADA DE MATERIALES' 
+                : 'COMPROBANTE DE SALIDA DE MATERIALES';
+                
+            document.getElementById('document-number').innerHTML = `<strong>Folio:</strong> ${currentProcess.documentNumber}`;
+            document.getElementById('document-date').innerHTML = `<strong>Fecha:</strong> ${date.toLocaleString()}`;
+            
+            if (isEntry) {
+                document.getElementById('document-info').innerHTML = `
+                    <strong>Orden de Compra:</strong> ${currentProcess.orderNumber}<br>
+                    <strong>Proveedor:</strong> ${currentProcess.supplier}<br>
+                    <strong>Factura/Remisión:</strong> ${currentProcess.invoice}
+                `;
+            } else {
+                document.getElementById('document-info').innerHTML = `
+                    <strong>Orden de Salida:</strong> ${currentProcess.orderNumber}<br>
+                    <strong>Responsable:</strong> ${currentProcess.engineer}
+                `;
+            }
+            
+            const itemsContainer = document.getElementById('document-items');
+            itemsContainer.innerHTML = '';
+            
+            currentProcess.items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.style.marginBottom = '20px';
+                div.style.paddingBottom = '20px';
+                div.style.borderBottom = '1px solid #eee';
+                
+                if (item.isDelete) {
+                    div.style.backgroundColor = '#ffebee';
+                    div.style.padding = '15px';
+                    div.style.borderLeft = '4px solid #f44336';
+                }
+                
+                const qrText = `
+                    ${isEntry ? 'ENTRADA' : (item.isDelete ? 'BAJA' : 'SALIDA')}
+                    ID:${item.itemId}
+                    Item:${item.itemName}
+                    ${item.isDelete ? 'Cantidad:Eliminado' : `Cantidad:${item.quantity}`}
+                    ${item.brand ? `Marca:${item.brand}` : ''}
+                    ${item.model ? `Modelo:${item.model}` : ''}
+                    ${item.size ? `Tamaño:${item.size}` : ''}
+                    ${item.group ? `Grupo:${item.group}` : ''}
+                    Fecha:${date.toISOString().split('T')[0]}
+                    Doc:${currentProcess.documentNumber}
+                    ${isEntry ? `Proveedor:${currentProcess.supplier}` : `Responsable:${currentProcess.engineer}`}
+                `;
+                
+                div.innerHTML = `
+                    <p><strong>${item.itemName} (${item.itemId})</strong>
+                    ${item.isDelete ? '<span style="color: #f44336;"> (BAJA DEFINITIVA)</span>' : ''}</p>
+                    ${item.brand ? `<p><strong>Marca:</strong> ${item.brand}</p>` : ''}
+                    ${item.model ? `<p><strong>Modelo:</strong> ${item.model}</p>` : ''}
+                    ${item.size ? `<p><strong>Tamaño:</strong> ${item.size}</p>` : ''}
+                    ${item.group ? `<p><strong>Grupo:</strong> ${item.group}</p>` : ''}
+                    <p><strong>Cantidad:</strong> ${item.quantity}</p>
+                    ${item.isDelete ? '<p class="text-warning">⚠️ Este insumo ha sido eliminado permanentemente del inventario</p>' : ''}
+                    ${item.isNew ? '<p style="color: green;">(Nuevo insumo)</p>' : ''}
+                    <div class="item-qr">
+                        <div id="doc-item-qr-${index}"></div>
+                        <small>QR del ítem en documento</small>
+                    </div>
+                `;
+                
+                itemsContainer.appendChild(div);
+                
+                // Generar QR para este ítem en el documento
+                generateQR(`doc-item-qr-${index}`, qrText, 120);
+            });
+            
+            // Generar código de barras para el documento completo
+            JsBarcode("#document-barcode", currentProcess.documentNumber, {
+                format: "CODE128",
+                lineColor: "#000",
+                width: 2,
+                height: 70,
+                displayValue: true
+            });
+            
+            document.getElementById('document-process').style.display = 'block';
+        }
+        
+        // Cerrar documento
+        function closeDocument() {
+            document.getElementById('document-process').style.display = 'none';
+        }
+        
+        // Imprimir documento
+        function printDocument() {
+            const originalContent = document.body.innerHTML;
+            const printContent = document.getElementById('document-process').innerHTML;
+            
+            document.body.innerHTML = `
+                <h1>${document.getElementById('document-title').textContent}</h1>
+                ${printContent}
+                <button onclick="window.print();document.body.innerHTML = originalContent;updateInventoryTable();">Imprimir</button>
+                <button onclick="document.body.innerHTML = originalContent;updateInventoryTable();">Cancelar</button>
+            `;
+            
+            window.print();
+            document.body.innerHTML = originalContent;
+            updateInventoryTable();
+        }
+        
+        // ========== FUNCIONES DE ALERTAS ==========
+        
+        // Actualizar alertas de stock
+        function updateAlerts() {
+            const container = document.getElementById('alerts-container');
+            container.innerHTML = '';
+            
+            const alerts = inventory.filter(item => 
+                item.existencias <= item.minimo
+            );
+            
+            if (alerts.length === 0) {
+                container.innerHTML = '<div class="alert success">✅ Todos los insumos tienen stock suficiente</div>';
+                return;
+            }
+            
+            alerts.forEach(item => {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert ${item.existencias === 0 ? 'critical' : 'warning'}`;
+                alertDiv.innerHTML = `
+                    <strong>${item.tipo} (ID: ${item.id})</strong><br>
+                    Existencias: ${item.existencias} | Mínimo: ${item.minimo}<br>
+                    ${item.existencias === 0 ? 'CRÍTICO: Stock agotado' : 'ADVERTENCIA: Stock bajo'}
+                `;
+                container.appendChild(alertDiv);
+            });
+        }
+        
+        // ========== FUNCIONES DE HISTORIAL ==========
+        
+        // Actualizar historial de movimientos
+        function updateMovementHistory() {
+            const tbody = document.getElementById('history-body');
+            tbody.innerHTML = '';
+            
+            movementHistory.forEach(mov => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${mov.date}</td>
+                    <td>${mov.type}</td>
+                    <td>${mov.itemName} (${mov.itemId})</td>
+                    <td>${mov.quantity}</td>
+                    <td>${mov.responsible}</td>
+                    <td>${mov.document}</td>
+                    <td>${mov.orderNumber}</td>
+                `;
+                
+                // Color según tipo de movimiento
+                if (mov.type === "ENTRADA") {
+                    row.style.backgroundColor = '#e6ffe6';
+                } else if (mov.type === "BAJA DEFINITIVA") {
+                    row.style.backgroundColor = '#ffebee';
+                } else {
+                    row.style.backgroundColor = '#ffe6e6';
+                }
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // ========== FUNCIONES DE SERIAL ==========
+        
+        // Conectar dispositivo serial
+        async function connectSerialDevice() {
+            try {
+                // Solicitar puerto serial
+                serialPort = await navigator.serial.requestPort();
+                await serialPort.open({ baudRate: 9600 });
+                
+                document.getElementById('device-status').textContent = "Dispositivo conectado";
+                document.getElementById('connect-btn').textContent = "Desconectar";
+                document.getElementById('connect-btn').onclick = disconnectSerialDevice;
+                
+                // Leer datos del puerto serial
+                readFromSerialPort();
+                
+            } catch (error) {
+                console.error('Error al conectar dispositivo:', error);
+                alert('Error al conectar dispositivo: ' + error.message);
+            }
+        }
+        
+        // Desconectar dispositivo serial
+        async function disconnectSerialDevice() {
+            if (reader) {
+                await reader.cancel();
+                reader = null;
+            }
+            
+            if (serialPort) {
+                await serialPort.close();
+                serialPort = null;
+            }
+            
+            document.getElementById('device-status').textContent = "Dispositivo no conectado";
+            document.getElementById('connect-btn').textContent = "Conectar Lector Externo";
+            document.getElementById('connect-btn').onclick = connectSerialDevice;
+        }
+        
+        // Leer desde puerto serial
+        async function readFromSerialPort() {
+            try {
+                const decoder = new TextDecoderStream();
+                const inputDone = serialPort.readable.pipeTo(decoder.writable);
+                const inputStream = decoder.readable;
+                
+                reader = inputStream.getReader();
+                
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) {
+                        reader.releaseLock();
+                        break;
+                    }
+                    
+                    // Procesar el código QR leído
+                    processScannedCode(value.trim());
+                }
+            } catch (error) {
+                console.error('Error al leer del puerto serial:', error);
+                disconnectSerialDevice();
+            }
+        }
+        
+        // Procesar código escaneado
+        function processScannedCode(code) {
+            console.log('Código escaneado:', code);
+            document.getElementById('qr-result').innerHTML = `
+                <div class="alert success">Código escaneado: <strong>${code}</strong></div>
+            `;
+            
+            // Extraer ID del código (asumiendo formato "ID:valor|...")
+            const idMatch = code.match(/ID:([^|\n]+)/);
+            const id = idMatch ? idMatch[1].trim() : code.trim();
+            
+            // Poner el ID en el campo correspondiente según el formulario activo
+            if (document.getElementById('entry-form').style.display === 'block') {
+                document.getElementById('entry-item-id').value = id;
+                showEntryStockInfo();
+                document.getElementById('entry-quantity').focus();
+            } else if (document.getElementById('exit-form').style.display === 'block') {
+                document.getElementById('exit-item-id').value = id;
+                showExitStockInfo();
+                document.getElementById('exit-quantity').focus();
+            }
+        }
+        
+        // ========== FUNCIONES ADICIONALES ==========
+        
+        // Imprimir tabla de inventario
+        function printInventoryTable() {
+            const originalContent = document.body.innerHTML;
+            const printContent = document.getElementById('inventory-table').outerHTML;
+            
+            document.body.innerHTML = `
+                <h1>Lista de Insumos Biomédicos</h1>
+                <p>Fecha: ${new Date().toLocaleString()}</p>
+                ${printContent}
+                <button onclick="window.print();document.body.innerHTML = originalContent;updateInventoryTable();">Imprimir</button>
+                <button onclick="document.body.innerHTML = originalContent;updateInventoryTable();">Cancelar</button>
+            `;
+            
+            window.print();
+            document.body.innerHTML = originalContent;
+            updateInventoryTable();
+        }
+    </script>
+</body>
+</html
