@@ -652,67 +652,89 @@
         // ========== FUNCIONES DE SINCRONIZACIÓN CON GOOGLE FORMS ==========
         
         // Sincronizar con Google Forms
-        async function syncWithGoogleForms() {
-            const statusElement = document.getElementById('sync-status');
-            statusElement.style.display = 'block';
-            statusElement.textContent = "Sincronizando con Google Forms...";
-            statusElement.className = "alert";
-            
-            try {
-                const response = await fetch(GOOGLE_SCRIPT_URL);
-                
-                if (!response.ok) {
-                    throw new Error(`Error HTTP: ${response.status}`);
-                }
-                
-                const newItems = await response.json();
-                
-                if (newItems && newItems.length > 0) {
-                    let addedItems = 0;
-                    let updatedItems = 0;
-                    
-                    // Procesar nuevos items del formulario
-                    newItems.forEach(newItem => {
-                        // Verificar si el item ya existe
-                        const existingIndex = inventory.findIndex(item => item.id === newItem.id);
-                        
-                        if (existingIndex >= 0) {
-                            // Actualizar existencias si el item ya existe
-                            inventory[existingIndex].existencias += parseInt(newItem.cantidad) || 0;
-                            updatedItems++;
-                        } else {
-                            // Agregar nuevo item al inventario
-                            inventory.push({
-                                id: newItem.id,
-                                tipo: newItem.tipo,
-                                marca: newItem.marca,
-                                modelo: newItem.modelo || '',
-                                tamaño: newItem.tamaño || '',
-                                grupo: newItem.grupo || 'UNIVERSAL',
-                                existencias: parseInt(newItem.cantidad) || 0,
-                                minimo: parseInt(newItem.minimo) || 5
-                            });
-                            addedItems++;
-                        }
-                    });
-                    
-                    // Actualizar la interfaz
-                    updateInventoryTable();
-                    updateAlerts();
-                    saveDataToLocalStorage();
-                    
-                    statusElement.textContent = `Sincronización exitosa: ${addedItems} nuevos insumos, ${updatedItems} insumos actualizados`;
-                    statusElement.className = "alert success";
-                } else {
-                    statusElement.textContent = "No hay nuevos insumos para sincronizar";
-                    statusElement.className = "alert";
-                }
-            } catch (error) {
-                console.error('Error al sincronizar con Google Forms:', error);
-                statusElement.textContent = `Error al sincronizar: ${error.message}`;
-                statusElement.className = "alert critical";
-            }
+async function syncWithGoogleForms() {
+    const statusElement = document.getElementById('sync-status');
+    statusElement.style.display = 'block';
+    statusElement.textContent = "Sincronizando con Google Forms...";
+    statusElement.className = "alert";
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL);
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
         }
+
+        const newItems = await response.json();
+
+        if (newItems && newItems.length > 0) {
+            let addedItems = 0;
+            let updatedItems = 0;
+
+            newItems.forEach(newItem => {
+                const existingIndex = inventory.findIndex(item => item.id === newItem.id);
+
+                if (existingIndex >= 0) {
+                    inventory[existingIndex].existencias += parseInt(newItem.cantidad) || 0;
+                    updatedItems++;
+
+                    movementHistory.unshift({
+                        date: new Date().toLocaleString(),
+                        type: "ENTRADA (Forms)",
+                        itemId: newItem.id,
+                        itemName: inventory[existingIndex].tipo,
+                        quantity: parseInt(newItem.cantidad),
+                        responsible: "Formulario Google",
+                        document: "Google Forms",
+                        documentNumber: `ENT-F-${Date.now()}`,
+                        orderNumber: "FORM"
+                    });
+
+                } else {
+                    inventory.push({
+                        id: newItem.id,
+                        tipo: newItem.tipo,
+                        marca: newItem.marca,
+                        modelo: newItem.modelo || '',
+                        tamaño: newItem.tamaño || '',
+                        grupo: newItem.grupo || 'UNIVERSAL',
+                        existencias: parseInt(newItem.cantidad) || 0,
+                        minimo: parseInt(newItem.minimo) || 5
+                    });
+                    addedItems++;
+
+                    movementHistory.unshift({
+                        date: new Date().toLocaleString(),
+                        type: "ENTRADA NUEVA (Forms)",
+                        itemId: newItem.id,
+                        itemName: newItem.tipo,
+                        quantity: parseInt(newItem.cantidad),
+                        responsible: "Formulario Google",
+                        document: "Google Forms",
+                        documentNumber: `ENT-F-${Date.now()}`,
+                        orderNumber: "FORM"
+                    });
+                }
+            });
+
+            saveDataToLocalStorage();
+            updateInventoryTable();
+            updateMovementHistory();
+            updateAlerts();
+
+            statusElement.textContent = `Sincronización exitosa: ${addedItems} nuevos, ${updatedItems} actualizados`;
+            statusElement.className = "alert success";
+        } else {
+            statusElement.textContent = "No hay nuevos insumos para sincronizar";
+            statusElement.className = "alert";
+        }
+    } catch (error) {
+        console.error('Error al sincronizar con Google Forms:', error);
+        statusElement.textContent = `Error al sincronizar: ${error.message}`;
+        statusElement.className = "alert critical";
+    }
+}
+
         
         // ========== FUNCIONES DE GESTIÓN DE INVENTARIO ==========
         
